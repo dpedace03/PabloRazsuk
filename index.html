@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Estudio Teatral | Seminarios & Formación</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Inter:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,600;0,800;1,400&family=Roboto+Slab:wght@400;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+  <!-- Leaflet CSS & JS (Mapa) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              primary: 'var(--color-primary, #6366f1)',
+              accent: 'var(--color-accent, #f43f5e)',
+              bg: 'var(--color-bg, #0f172a)',
+              card: 'var(--color-card, #1e293b)',
+              text: 'var(--color-text, #f8fafc)'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      --color-primary: #6366f1;
+      --color-accent: #f43f5e;
+      --color-bg: #0f172a;
+      --color-card: #1e293b;
+      --color-text: #f8fafc;
+      --color-titles: #ffffff;
+      --color-subtitles: #94a3b8;
+
+      /* Tipografía y Tamaños */
+      --font-family-titles: 'Cinzel', serif;
+      --font-family-body: 'Inter', sans-serif;
+      
+      --font-size-title: 2.75rem;    /* 44px */
+      --font-size-section: 2.00rem;  /* 32px */
+      --font-size-card: 1.25rem;     /* 20px */
+      --font-size-body: 0.95rem;     /* 15px */
+    }
+
+    body {
+      background-color: var(--color-bg);
+      color: var(--color-text);
+      font-family: var(--font-family-body);
+      font-size: var(--font-size-body);
+      transition: all 0.3s ease;
+    }
+
+    h1, h2, h3, .custom-title {
+      font-family: var(--font-family-titles);
+      color: var(--color-titles);
+    }
+
+    h1 { font-size: var(--font-size-title) !important; }
+    h2 { font-size: var(--font-size-section) !important; }
+    .card-title { font-size: var(--font-size-card) !important; }
+
+    .subtitle-text {
+      color: var(--color-subtitles);
+    }
+
+    .theme-card {
+      background-color: var(--color-card);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .btn-primary {
+      background-color: var(--color-primary);
+      color: #fff;
+      transition: filter 0.2s ease;
+    }
+    .btn-primary:hover { filter: brightness(1.15); }
+
+    .btn-accent {
+      background-color: var(--color-accent);
+      color: #fff;
+      transition: filter 0.2s ease;
+    }
+    .btn-accent:hover { filter: brightness(1.15); }
+
+    .accent-border { border-color: var(--color-primary); }
+
+    #map {
+      height: 320px;
+      border-radius: 1rem;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+  <!-- NAVEGACIÓN -->
+  <nav class="sticky top-0 z-50 backdrop-blur-md bg-opacity-80 border-b border-white/10" style="background-color: var(--color-bg);">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <i class="fa-solid fa-masks-theater text-2xl" style="color: var(--color-accent);"></i>
+        <span class="font-extrabold text-xl tracking-wider custom-title" id="navBrandName">ESTUDIO TEATRAL</span>
+      </div>
+      <div class="flex items-center space-x-4">
+        <div class="hidden md:flex space-x-6 font-medium text-sm items-center">
+          <a href="#biografia" class="hover:opacity-80">Biografía</a>
+          <a href="#seminarios" class="hover:opacity-80">Seminarios</a>
+          <a href="#contacto" class="hover:opacity-80">Ubicación</a>
+        </div>
+        
+        <!-- BOTÓN DE GESTIÓN (ADMIN) -->
+        <button id="btnGestionNav" onclick="handleGestionClick()" class="flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg border border-white/20 hover:bg-white/10 transition font-semibold">
+          <i class="fa-solid fa-lock" id="iconLock"></i> <span id="lblGestionNav">Gestión</span>
+        </button>
+
+        <!-- BOTÓN PALETA Y FUENTES -->
+        <button onclick="toggleSetupModal()" class="p-2 rounded-full border border-white/20 hover:bg-white/10 transition" title="Configurar Estilos y Fuentes">
+          <i class="fa-solid fa-sliders text-lg" style="color: var(--color-primary);"></i>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO & BIOGRAFÍA -->
+  <section id="biografia" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+    <div class="md:col-span-5 relative">
+      <div class="relative z-10 rounded-2xl overflow-hidden shadow-2xl border-2 accent-border">
+        <img id="imgMaestro" src="" alt="Foto Maestro" class="w-full h-[420px] object-cover">
+      </div>
+      <div class="absolute -bottom-4 -right-4 w-full h-full rounded-2xl -z-10 opacity-30" style="background-color: var(--color-accent);"></div>
+    </div>
+    <div class="md:col-span-7 space-y-5">
+      <span class="text-xs uppercase tracking-widest font-semibold px-3 py-1 rounded-full bg-white/10" style="color: var(--color-accent);" id="lblTituloRol">Director & Pedagogo Teatral</span>
+      <h1 class="font-black leading-tight" id="lblNombreMaestro">Maestro Roberto Mendoza</h1>
+      <p class="leading-relaxed subtitle-text" id="lblBioMaestro">
+        Con más de 35 años de trayectoria en los escenarios de Latinoamérica y Europa...
+      </p>
+      <p class="italic text-gray-400" id="lblFraseMaestro">
+        "El teatro no es representación, es presencia viva."
+      </p>
+      <div class="flex flex-wrap gap-4 pt-2">
+        <a href="#seminarios" class="btn-primary px-6 py-3 rounded-xl font-bold shadow-lg flex items-center gap-2 text-sm">
+          <i class="fa-solid fa-ticket"></i> Ver Seminarios
+        </a>
+        <button onclick="abrirConsultaGeneral()" class="btn-accent px-6 py-3 rounded-xl font-bold shadow-lg flex items-center gap-2 text-sm">
+          <i class="fa-brands fa-whatsapp"></i> Consulta Directa
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SEMINARIOS (VISTA ALUMNO / PÚBLICA) -->
+  <section id="seminarios" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="text-center max-w-2xl mx-auto mb-10">
+      <h2 class="font-extrabold mb-3">Seminarios e Intensivos</h2>
+      <p class="subtitle-text">Cupos limitados. La inscripción se realiza vía entrevista o consulta directa por WhatsApp.</p>
+    </div>
+
+    <div id="seminarios-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <!-- Dinámico -->
+    </div>
+  </section>
+
+  <!-- UBICACIÓN Y MAPA -->
+  <section id="contacto" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="theme-card p-6 md:p-8 rounded-3xl grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+      <div class="md:col-span-5 space-y-4">
+        <h3 class="text-2xl font-bold custom-title">Nuestro Estudio</h3>
+        <p class="subtitle-text text-sm">Espacio de entrenamiento equipado con piso flotante de madera, acústica acondicionada y luz regulable.</p>
+        <ul class="space-y-3 text-sm subtitle-text">
+          <li class="flex items-center gap-3">
+            <i class="fa-solid fa-location-dot" style="color: var(--color-accent);"></i> Av. Corrientes 1542, CABA, Argentina
+          </li>
+          <li class="flex items-center gap-3">
+            <i class="fa-solid fa-clock" style="color: var(--color-primary);"></i> Recepción: Lun a Vie de 14:00 a 20:00 hs
+          </li>
+          <li class="flex items-center gap-3">
+            <i class="fa-brands fa-whatsapp text-emerald-400"></i> +54 9 11 5555-8888
+          </li>
+        </ul>
+      </div>
+      <div class="md:col-span-7">
+        <div id="map"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECCIÓN EXCLUSIVA DE ADMINISTRACIÓN (SOLO VISIBLE SI ES ADMIN) -->
+  <section id="adminSection" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t-2 border-dashed border-indigo-500/40 my-12 bg-black/20 rounded-3xl">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b border-white/10 pb-4">
+      <div>
+        <span class="text-xs uppercase font-bold text-emerald-400 tracking-wider"><i class="fa-solid fa-user-shield"></i> Modo Administrador Activo</span>
+        <h2 class="font-black">Panel General de Gestión</h2>
+      </div>
+      <button onclick="cerrarSesionAdmin()" class="bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 text-xs px-4 py-2 rounded-xl font-bold border border-rose-500/30">
+        <i class="fa-solid fa-power-off"></i> Cerrar Sesión Admin
+      </button>
+    </div>
+
+    <!-- TABS ADMIN -->
+    <div class="flex gap-2 border-b border-white/10 mb-8 overflow-x-auto">
+      <button onclick="switchTabAdmin('estadisticas')" id="tabBtnEstadisticas" class="px-4 py-2 text-sm font-bold border-b-2 border-indigo-500 text-indigo-400 flex items-center gap-2">
+        <i class="fa-solid fa-chart-pie"></i> 1. Estadísticas & Métricas
+      </button>
+      <button onclick="switchTabAdmin('perfil')" id="tabBtnPerfil" class="px-4 py-2 text-sm font-bold border-b-2 border-transparent text-gray-400 hover:text-white flex items-center gap-2">
+        <i class="fa-solid fa-user-gear"></i> 2. Perfil Maestro
+      </button>
+      <button onclick="switchTabAdmin('seminarios')" id="tabBtnSeminarios" class="px-4 py-2 text-sm font-bold border-b-2 border-transparent text-gray-400 hover:text-white flex items-center gap-2">
+        <i class="fa-solid fa-chalkboard-user"></i> 3. Seminarios
+      </button>
+      <button onclick="switchTabAdmin('alumnos')" id="tabBtnAlumnos" class="px-4 py-2 text-sm font-bold border-b-2 border-transparent text-gray-400 hover:text-white flex items-center gap-2">
+        <i class="fa-solid fa-users"></i> 4. Alumnos & Asistencia
+      </button>
+      <button onclick="switchTabAdmin('publicidad')" id="tabBtnPublicidad" class="px-4 py-2 text-sm font-bold border-b-2 border-transparent text-gray-400 hover:text-white flex items-center gap-2">
+        <i class="fa-solid fa-paper-plane"></i> 5. Difusión WhatsApp
+      </button>
+    </div>
+
+    <!-- TAB ESTADÍSTICAS & MÉTRICAS (NUEVO) -->
+    <div id="tabAdminEstadisticas" class="space-y-8">
+      <!-- TARJETAS DE RESUMEN GLOBAL -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="theme-card p-5 rounded-2xl flex items-center justify-between">
+          <div>
+            <p class="text-xs text-gray-400 uppercase font-bold tracking-wider">Total Alumnos</p>
+            <h4 class="text-3xl font-black mt-1" id="statTotalAlumnos">0</h4>
+            <span class="text-[11px] text-gray-400">Inscriptos registrados</span>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xl">
+            <i class="fa-solid fa-users"></i>
+          </div>
+        </div>
+
+        <div class="theme-card p-5 rounded-2xl flex items-center justify-between">
+          <div>
+            <p class="text-xs text-gray-400 uppercase font-bold tracking-wider">Recaudación Total</p>
+            <h4 class="text-2xl font-black mt-1 text-emerald-400" id="statTotalRecaudado">$0</h4>
+            <span class="text-[11px] text-gray-400">Estimada por matrículas</span>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl">
+            <i class="fa-solid fa-sack-dollar"></i>
+          </div>
+        </div>
+
+        <div class="theme-card p-5 rounded-2xl flex items-center justify-between">
+          <div>
+            <p class="text-xs text-gray-400 uppercase font-bold tracking-wider">Asistencias Totales</p>
+            <h4 class="text-3xl font-black mt-1 text-cyan-400" id="statTotalAsistencias">0</h4>
+            <span class="text-[11px] text-gray-400">Presentes acumulados</span>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xl">
+            <i class="fa-solid fa-clipboard-check"></i>
+          </div>
+        </div>
+
+        <div class="theme-card p-5 rounded-2xl flex items-center justify-between">
+          <div>
+            <p class="text-xs text-gray-400 uppercase font-bold tracking-wider">Presentismo Promedio</p>
+            <h4 class="text-3xl font-black mt-1 text-amber-400" id="statPorcentajePresentismo">0%</h4>
+            <span class="text-[11px] text-gray-400">Ratio de asistencia</span>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-xl">
+            <i class="fa-solid fa-chart-line"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- DESGLOSE DETALLADO POR SEMINARIO -->
+      <div class="theme-card rounded-2xl p-6">
+        <h3 class="text-xl font-bold mb-4 custom-title flex items-center gap-2">
+          <i class="fa-solid fa-chart-column" style="color: var(--color-primary);"></i> Desglose Métrico por Seminario
+        </h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-black/40 text-gray-400 border-b border-white/10 uppercase text-xs">
+              <tr>
+                <th class="p-4">Seminario</th>
+                <th class="p-4 text-center">Inscriptos / Cupo</th>
+                <th class="p-4 text-center">Precio Unitario</th>
+                <th class="p-4 text-right">Recaudación Estimada</th>
+                <th class="p-4 text-center">Asistencias Tomadas</th>
+                <th class="p-4 text-right">% Presentismo</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-estadisticas-seminarios" class="divide-y divide-white/5">
+              <!-- Dinámico -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: PARAMETRIZACIÓN DEL PROFESOR / PERFIL -->
+    <div id="tabAdminPerfil" class="hidden space-y-6">
+      <div class="theme-card p-6 rounded-2xl max-w-3xl space-y-4">
+        <h3 class="text-lg font-bold border-b border-white/10 pb-2 custom-title">Configurar Información Institucional y Foto</h3>
+        <form onsubmit="guardarPerfilMaestro(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-gray-300">Nombre del Maestro</label>
+            <input type="text" id="admNombreMaestro" required class="w-full mt-1 bg-black/40 border border-white/10 rounded-lg p-2.5 text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-300">Título / Rol Principal</label>
+            <input type="text" id="admTituloRol" required class="w-full mt-1 bg-black/40 border border-white/10 rounded-lg p-2.5 text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-300">Foto Principal (URL o Subir archivo)</label>
+            <div class="flex gap-2 mt-1">
+              <input type="text" id="admFotoUrl" placeholder="https://ejemplo.com/foto.jpg" class="w-full bg-black/40 border border-white/10 rounded-lg p-2.5 text-sm">
+              <label class="btn-accent px-4 py-2.5 rounded-lg text-xs font-bold cursor-pointer whitespace-nowrap flex items-center gap-1">
+                <i class="fa-solid fa-upload"></i> Subir
+                <input type="file" accept="image/*" onchange="cargarFotoArchivo(event)" class="hidden">
+              </label>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-300">Resumen Biográfico</label>
+            <textarea id="admBioMaestro" rows="3" required class="w-full mt-1 bg-black/40 border border-white/10 rounded-lg p-2.5 text-sm"></textarea>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-300">Cita / Frase Inspiracional</label>
+            <input type="text" id="admFraseMaestro" class="w-full mt-1 bg-black/40 border border-white/10 rounded-lg p-2.5 text-sm">
+          </div>
+          <button type="submit" class="btn-primary px-6 py-2.5 rounded-xl font-bold text-sm">Guardar Cambios de Perfil</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- TAB 3: GESTIÓN DE SEMINARIOS -->
+    <div id="tabAdminSeminarios" class="hidden space-y-6">
+      <div class="flex justify-between items-center">
+        <h3 class="text-xl font-bold custom-title">Catálogo de Seminarios Ofertados</h3>
+        <button onclick="abrirModalSeminario()" class="btn-primary px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2">
+          <i class="fa-solid fa-plus"></i> Nuevo Seminario
+        </button>
+      </div>
+      <div class="theme-card rounded-2xl overflow-hidden">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-black/40 text-gray-400 border-b border-white/10 uppercase text-xs">
+            <tr>
+              <th class="p-4">Seminario</th>
+              <th class="p-4">Fecha / Duración</th>
+              <th class="p-4">Cupo (Inscriptos / Max)</th>
+              <th class="p-4">Precio</th>
+              <th class="p-4 text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-admin-seminarios" class="divide-y divide-white/5">
+            <!-- Dinámico -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 4: ALUMNOS Y ASISTENCIA CON FILTROS -->
+    <div id="tabAdminAlumnos" class="hidden space-y-6">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h3 class="text-xl font-bold custom-title">Listado de Inscriptos y Control de Asistencia</h3>
+        <button onclick="toggleRegistroModal()" class="btn-primary px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2">
+          <i class="fa-solid fa-user-plus"></i> Registrar Alumno Manualmente
+        </button>
+      </div>
+
+      <!-- BARRA DE FILTROS -->
+      <div class="theme-card p-4 rounded-2xl grid grid-cols-1 md:grid-cols-3 gap-4 border border-white/10">
+        <div>
+          <label class="text-xs font-semibold text-gray-400 block mb-1"><i class="fa-solid fa-magnifying-glass mr-1"></i> Buscar Alumno</label>
+          <input type="text" id="filtroTexto" oninput="renderizarTablaAlumnos()" placeholder="Nombre o Email..." class="w-full bg-black/40 border border-white/10 rounded-xl p-2 text-xs focus:outline-none focus:border-indigo-500">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-gray-400 block mb-1"><i class="fa-solid fa-filter mr-1"></i> Filtrar por Seminario</label>
+          <select id="filtroSeminario" onchange="renderizarTablaAlumnos()" class="w-full bg-black/40 border border-white/10 rounded-xl p-2 text-xs text-gray-200 focus:outline-none">
+            <option value="">Todos los seminarios</option>
+            <!-- Dinámico -->
+          </select>
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-gray-400 block mb-1"><i class="fa-solid fa-clipboard-user mr-1"></i> Estado de Asistencia</label>
+          <select id="filtroAsistencia" onchange="renderizarTablaAlumnos()" class="w-full bg-black/40 border border-white/10 rounded-xl p-2 text-xs text-gray-200 focus:outline-none">
+            <option value="todos">Todos los Estados</option>
+            <option value="perfecta">Asistencia Perfecta (100%)</option>
+            <option value="regular">Regular (≥ 50%)</option>
+            <option value="faltas">Con Inasistencias (&lt; 50%)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="theme-card rounded-2xl overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-black/40 text-gray-400 border-b border-white/10 uppercase text-xs">
+              <tr>
+                <th class="p-4 text-center">
+                  <input type="checkbox" id="selectAll" onclick="toggleSelectAll()" class="rounded">
+                </th>
+                <th class="p-4">Nombre / Apellido</th>
+                <th class="p-4">Contacto</th>
+                <th class="p-4">Seminario Inscripto</th>
+                <th class="p-4">Asistencias (Clases 1 a 4)</th>
+                <th class="p-4 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-alumnos" class="divide-y divide-white/5">
+              <!-- Dinámico -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: DIFUSIÓN DE PUBLICIDAD POR WHATSAPP -->
+    <div id="tabAdminPublicidad" class="hidden space-y-6">
+      <div class="theme-card p-6 rounded-2xl">
+        <h3 class="text-lg font-bold mb-4 flex items-center gap-2 custom-title">
+          <i class="fa-solid fa-paper-plane" style="color: var(--color-accent);"></i> Campaña Publicitaria por WhatsApp
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-3">
+            <label class="block text-xs uppercase font-bold text-gray-400">1. Imagen de Publicidad (PNG/JPG)</label>
+            <input type="file" id="publicidadImage" accept="image/*" onchange="previewPublicidad(event)" class="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20">
+            <div id="imgPreviewContainer" class="hidden mt-2 border border-white/10 rounded-xl overflow-hidden max-h-40 bg-black/40 flex items-center justify-center p-2">
+              <img id="imgPreview" class="max-h-36 object-contain" src="" alt="Vista previa">
+            </div>
+          </div>
+          <div class="space-y-3 flex flex-col justify-between">
+            <div>
+              <label class="block text-xs uppercase font-bold text-gray-400">2. Mensaje Promocional</label>
+              <textarea id="publicidadTexto" rows="4" class="w-full mt-1 bg-black/30 border border-white/10 rounded-xl p-3 text-sm focus:outline-none focus:border-indigo-500" placeholder="Escribí aquí la promoción... Ex: ¡Nuevas vacantes para el Seminario de MÁSCARA NEUTRA! Descuento especial este mes."></textarea>
+            </div>
+            <button onclick="enviarPublicidadSeleccionados()" class="btn-accent w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 text-sm">
+              <i class="fa-brands fa-whatsapp text-lg"></i> Enviar a Alumnos Seleccionados en Registro (<span id="countSelected">0</span>)
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-white/10 py-6 text-center text-xs text-gray-500">
+    <p>© 2026 Estudio Teatral. Todos los derechos reservados.</p>
+  </footer>
+
+  <!-- MODAL: LOGIN ADMIN -->
+  <div id="modalLoginAdmin" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="theme-card max-w-sm w-full p-6 rounded-2xl relative shadow-2xl">
+      <button onclick="toggleLoginAdminModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+      <div class="text-center mb-4">
+        <i class="fa-solid fa-user-lock text-3xl mb-2" style="color: var(--color-primary);"></i>
+        <h3 class="text-xl font-bold custom-title">Acceso Administrador</h3>
+        <p class="text-xs text-gray-400">Ingresá la clave de gestión para administrar el sitio.</p>
+      </div>
+      <form onsubmit="validarLoginAdmin(event)" class="space-y-3">
+        <div>
+          <label class="text-xs font-semibold text-gray-300">Contraseña</label>
+          <input type="password" id="adminPassword" placeholder="Contraseña (Demo: admin123)" required class="w-full mt-1 bg-black/40 border border-white/10 rounded-lg p-2.5 text-sm text-center">
+        </div>
+        <button type="submit" class="btn-primary w-full py-2.5 rounded-xl font-bold text-sm">Ingresar al Panel</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: CREAR / EDITAR SEMINARIO (ADMIN) -->
+  <div id="modalSeminarioAdmin" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="theme-card max-w-lg w-full p-6 rounded-2xl relative shadow-2xl max-h-[90vh] overflow-y-auto">
+      <button onclick="cerrarModalSeminario()" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+      <h3 class="text-xl font-bold mb-4 custom-title" id="tituloModalSeminario">Nuevo Seminario</h3>
+      <form id="formSeminario" onsubmit="guardarSeminario(event)" class="space-y-3">
+        <input type="hidden" id="semId">
+        <div>
+          <label class="text-xs font-semibold text-gray-300">Título del Seminario</label>
+          <input type="text" id="semTitulo" required class="w-full mt-1 bg-black/40 border border-white/10 rounded-lg p-2 text-sm">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-gray-300">Descripción</label>
+          <textarea id="semDescripcion" rows="2" required class="w-full mt-1 bg-black/40 border border-white/10 rounded-lg p-2 text-sm"></textarea>
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="text-xs font-semibold text-gray-300">Fecha Inicio</label>
+            <input type="text" id="semFecha" required placeholder="Ej: 15 Oct" class="w-full mt-1 bg-black/40 border border-white/10 rounded-lg p-2 text-sm">
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-gray-300">Duración</label>
+            <input type="text" id="semDuracion" required placeholder="Ej: 4 clases" class="w-full mt-1 bg-black/40 border border-white/10 rounded-lg p-2 text-sm">
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-gray-300">Cupo Máximo</label>
+            <input type="number" id="semCupoMax" required min="1" placeholder="Ej: 12" class="w-full mt-1 bg-black/40 border border-white/10 rounded-lg p-2 text-sm">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-xs font-semibold text-gray-300">Día y Horario</label>
+            <input type="text" id="semHorario" required placeholder="Ej: Sábados 10hs" class="w-full mt-1 bg-black/40 border border-white/10 rounded-lg p-2 text-sm">
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-gray-300">Precio</label>
+            <input type="text" id="semPrecio" required placeholder="Ej: $45.000 ARS" class="w-full mt-1 bg-black/40 border border-white/10 rounded-lg p-2 text-sm">
+          </div>
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-gray-300">Requisitos Previos</label>
+          <input type="text" id="semRequisitos" required class="w-full mt-1 bg-black/40 border border-white/10 rounded-lg p-2 text-sm">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-gray-300">Lugar / Sala</label>
+          <input type="text" id="semLugar" required class="w-full mt-1 bg-black/40 border border-white/10 rounded-lg p-2 text-sm">
+        </div>
+        <button type="submit" class="btn-primary w-full py-3 rounded-xl font-bold mt-2">Guardar Seminario</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: INSCRIPCIÓN / CONSULTA SEMINARIO (ALUMNO) -->
+  <div id="modalInscripcion" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="theme-card max-w-md w-full p-6 rounded-2xl relative shadow-2xl">
+      <button onclick="cerrarInscripcionModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+      <h3 class="text-xl font-bold mb-1 custom-title" id="modalSeminarioTitulo">Inscripción</h3>
+      <p class="text-xs text-gray-400 mb-4">Completá tus datos para pre-inscribirte y consultar vía WhatsApp.</p>
+      
+      <form id="formInscripcion" onsubmit="procesarInscripcion(event)" class="space-y-3">
+        <input type="hidden" id="modalSeminarioNombre">
+        <div>
+          <label class="text-xs font-semibold text-gray-300">Nombre Completo</label>
+          <input type="text" id="insNombre" required class="w-full mt-1 bg-black/40 border border-white/10 rounded-lg p-2 text-sm">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-gray-300">Teléfono (WhatsApp)</label>
+          <input type="tel" id="insTelefono" placeholder="+54911..." required class="w-full mt-1 bg-black/40 border border-white/10 rounded-lg p-2 text-sm">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-gray-300">Email</label>
+          <input type="email" id="insEmail" required class="w-full mt-1 bg-black/40 border border-white/10 rounded-lg p-2 text-sm">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-gray-300">Consulta adicional (opcional)</label>
+          <textarea id="insMensaje" rows="2" class="w-full mt-1 bg-black/40 border border-white/10 rounded-lg p-2 text-sm"></textarea>
+        </div>
+        <button type="submit" class="btn-primary w-full py-3 rounded-xl font-bold mt-2 flex items-center justify-center gap-2">
+          <i class="fa-brands fa-whatsapp text-lg"></i> Confirmar vía WhatsApp
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: REGISTRO MANUAL DE ALUMNO (ADMIN) -->
+  <div id="modalRegistro" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="theme-card max-w-md w-full p-6 rounded-2xl relative shadow-2xl">
+      <button onclick="toggleRegistroModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+      <h3 class="text-xl font-bold mb-4 custom-title">Registrar Alumno Manualmente</h3>
+      <form id="formRegistro" onsubmit="guardarAlumnoManual(event)" class="space-y-3">
+        <div>
+          <label class="text-xs font-semibold text-gray-300">Nombre Completo</label>
+          <input type="text" id="regNombre" required class="w-full mt-1 bg-black/40 border border-white/10 rounded-lg p-2 text-sm">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-gray-300">Teléfono (WhatsApp)</label>
+          <input type="tel" id="regTelefono" required placeholder="+54911..." class="w-full mt-1 bg-black/40 border border-white/10 rounded-lg p-2 text-sm">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-gray-300">Email</label>
+          <input type="email" id="regEmail" required class="w-full mt-1 bg-black/40 border border-white/10 rounded-lg p-2 text-sm">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-gray-300">Seminario Asignado</label>
+          <select id="regSeminario" class="w-full mt-1 bg-black/40 border border-white/10 rounded-lg p-2 text-sm text-gray-200">
+            <!-- Dinámico -->
+          </select>
+        </div>
+        <button type="submit" class="btn-primary w-full py-3 rounded-xl font-bold mt-2">Guardar Alumno</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: SETUP / CONFIGURACIÓN DE PALETA & FUENTES (PARAMETRIZACIÓN COMPLETA) -->
+  <div id="modalSetup" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="theme-card max-w-lg w-full p-6 rounded-2xl relative shadow-2xl max-h-[92vh] overflow-y-auto">
+      <button onclick="toggleSetupModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+      <h3 class="text-xl font-bold mb-2 flex items-center gap-2 custom-title">
+        <i class="fa-solid fa-sliders" style="color: var(--color-primary);"></i> Diseño, Colores y Tipografía
+      </h3>
+      <p class="text-xs text-gray-400 mb-4">Personalizá colores, fuentes, tamaños y tonos para títulos, tarjetas y párrafos de todo el sitio.</p>
+      
+      <!-- TABS SETUP -->
+      <div class="flex gap-2 border-b border-white/10 mb-4">
+        <button onclick="switchTabSetup('colores')" id="tabSetupBtnColores" class="px-3 py-1.5 text-xs font-bold border-b-2 border-indigo-500 text-indigo-400">Paleta de Colores</button>
+        <button onclick="switchTabSetup('fuentes')" id="tabSetupBtnFuentes" class="px-3 py-1.5 text-xs font-bold border-b-2 border-transparent text-gray-400 hover:text-white">Tipografías y Tamaños</button>
+      </div>
+
+      <!-- TAB SETUP 1: COLORES -->
+      <div id="tabSetupColores" class="space-y-4">
+        <div>
+          <label class="text-xs font-bold uppercase text-gray-300 block mb-2">Paletas Predefinidas</label>
+          <div class="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto pr-1">
+            <button onclick="aplicarPreset('#6366f1', '#f43f5e', '#0f172a', '#1e293b', '#ffffff', '#94a3b8')" class="p-2 border border-white/10 rounded-lg text-xs flex items-center gap-2 bg-white/5 hover:bg-white/10">
+              <span class="w-3 h-3 rounded-full bg-indigo-500"></span> Noche Neón
+            </button>
+            <button onclick="aplicarPreset('#10b981', '#f59e0b', '#064e3b', '#022c22', '#f0fdf4', '#a7f3d0')" class="p-2 border border-white/10 rounded-lg text-xs flex items-center gap-2 bg-white/5 hover:bg-white/10">
+              <span class="w-3 h-3 rounded-full bg-emerald-500"></span> Esmeralda
+            </button>
+            <button onclick="aplicarPreset('#d97706', '#dc2626', '#1c1917', '#292524', '#fff7ed', '#fdba74')" class="p-2 border border-white/10 rounded-lg text-xs flex items-center gap-2 bg-white/5 hover:bg-white/10">
+              <span class="w-3 h-3 rounded-full bg-amber-600"></span> Dramático Warm
+            </button>
+            <button onclick="aplicarPreset('#8b5cf6', '#ec4899', '#18181b', '#27272a', '#faf5ff', '#d8b4fe')" class="p-2 border border-white/10 rounded-lg text-xs flex items-center gap-2 bg-white/5 hover:bg-white/10">
+              <span class="w-3 h-3 rounded-full bg-purple-500"></span> Violeta Moderno
+            </button>
+            <button onclick="aplicarPreset('#0284c7', '#06b6d4', '#082f49', '#0c4a6e', '#f0f9ff', '#7dd3fc')" class="p-2 border border-white/10 rounded-lg text-xs flex items-center gap-2 bg-white/5 hover:bg-white/10">
+              <span class="w-3 h-3 rounded-full bg-sky-500"></span> Océano Profundo
+            </button>
+            <button onclick="aplicarPreset('#06b6d4', '#f43f5e', '#09090b', '#18181b', '#ffffff', '#a1a1aa')" class="p-2 border border-white/10 rounded-lg text-xs flex items-center gap-2 bg-white/5 hover:bg-white/10">
+              <span class="w-3 h-3 rounded-full bg-cyan-500"></span> Cyberpunk
+            </button>
+          </div>
+        </div>
+
+        <hr class="border-white/10">
+
+        <div class="space-y-2">
+          <label class="text-xs font-bold uppercase text-gray-300 block">Colores Específicos</label>
+          <div class="grid grid-cols-2 gap-3 text-xs">
+            <div class="flex justify-between items-center bg-black/30 p-2 rounded-lg">
+              <span class="text-gray-300">Botón Primario</span>
+              <input type="color" id="pickerPrimary" class="bg-transparent cursor-pointer w-7 h-7 rounded">
+            </div>
+            <div class="flex justify-between items-center bg-black/30 p-2 rounded-lg">
+              <span class="text-gray-300">Botón Acento</span>
+              <input type="color" id="pickerAccent" class="bg-transparent cursor-pointer w-7 h-7 rounded">
+            </div>
+            <div class="flex justify-between items-center bg-black/30 p-2 rounded-lg">
+              <span class="text-gray-300">Fondo General</span>
+              <input type="color" id="pickerBg" class="bg-transparent cursor-pointer w-7 h-7 rounded">
+            </div>
+            <div class="flex justify-between items-center bg-black/30 p-2 rounded-lg">
+              <span class="text-gray-300">Fondo de Cards</span>
+              <input type="color" id="pickerCard" class="bg-transparent cursor-pointer w-7 h-7 rounded">
+            </div>
+            <div class="flex justify-between items-center bg-black/30 p-2 rounded-lg">
+              <span class="text-gray-300">Color Títulos</span>
+              <input type="color" id="pickerTitles" class="bg-transparent cursor-pointer w-7 h-7 rounded">
+            </div>
+            <div class="flex justify-between items-center bg-black/30 p-2 rounded-lg">
+              <span class="text-gray-300">Color Subtítulos/Texto</span>
+              <input type="color" id="pickerSubtitles" class="bg-transparent cursor-pointer w-7 h-7 rounded">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB SETUP 2: FUENTES Y TAMAÑOS -->
+      <div id="tabSetupFuentes" class="hidden space-y-4">
+        <div class="space-y-3">
+          <div>
+            <label class="text-xs font-bold text-gray-300 block mb-1">Familia de Fuente - Títulos</label>
+            <select id="selectFontTitles" class="w-full bg-black/40 border border-white/10 rounded-xl p-2.5 text-xs text-gray-200 focus:outline-none">
+              <option value="'Cinzel', serif">Cinzel (Clásico / Teatral Dramático)</option>
+              <option value="'Playfair Display', serif">Playfair Display (Elegante / Editorial)</option>
+              <option value="'Roboto Slab', serif">Roboto Slab (Robusto / Moderno)</option>
+              <option value="'Space Grotesk', sans-serif">Space Grotesk (Vanguardista / Tech)</option>
+              <option value="'Inter', sans-serif">Inter (Limpio / Minimalista)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="text-xs font-bold text-gray-300 block mb-1">Familia de Fuente - Cuerpo / Texto</label>
+            <select id="selectFontBody" class="w-full bg-black/40 border border-white/10 rounded-xl p-2.5 text-xs text-gray-200 focus:outline-none">
+              <option value="'Inter', sans-serif">Inter (Limpio / Alta Legibilidad)</option>
+              <option value="'Roboto Slab', serif">Roboto Slab (Serif legible)</option>
+              <option value="'Space Grotesk', sans-serif">Space Grotesk (Contemporáneo)</option>
+              <option value="system-ui, sans-serif">Sistema Nativo</option>
+            </select>
+          </div>
+
+          <hr class="border-white/10">
+
+          <label class="text-xs font-bold uppercase text-gray-300 block">Tamaños de Fuente (Escala Custom)</label>
+          
+          <div class="space-y-2">
+            <div>
+              <div class="flex justify-between text-xs text-gray-300 mb-1">
+                <span>Título Principal (H1 - Maestro)</span>
+                <span id="lblValTitle">44 px</span>
+              </div>
+              <input type="range" id="rangeTitle" min="32" max="60" value="44" class="w-full h-1.5 bg-black/40 rounded-lg appearance-none cursor-pointer" oninput="document.getElementById('lblValTitle').innerText = this.value + ' px'">
+            </div>
+
+            <div>
+              <div class="flex justify-between text-xs text-gray-300 mb-1">
+                <span>Títulos de Sección (H2)</span>
+                <span id="lblValSection">32 px</span>
+              </div>
+              <input type="range" id="rangeSection" min="24" max="42" value="32" class="w-full h-1.5 bg-black/40 rounded-lg appearance-none cursor-pointer" oninput="document.getElementById('lblValSection').innerText = this.value + ' px'">
+            </div>
+
+            <div>
+              <div class="flex justify-between text-xs text-gray-300 mb-1">
+                <span>Títulos de Cards de Seminario</span>
+                <span id="lblValCard">20 px</span>
+              </div>
+              <input type="range" id="rangeCard" min="16" max="28" value="20" class="w-full h-1.5 bg-black/40 rounded-lg appearance-none cursor-pointer" oninput="document.getElementById('lblValCard').innerText = this.value + ' px'">
+            </div>
+
+            <div>
+              <div class="flex justify-between text-xs text-gray-300 mb-1">
+                <span>Texto General / Párrafos</span>
+                <span id="lblValBody">15 px</span>
+              </div>
+              <input type="range" id="rangeBody" min="13" max="18" value="15" class="w-full h-1.5 bg-black/40 rounded-lg appearance-none cursor-pointer" oninput="document.getElementById('lblValBody').innerText = this.value + ' px'">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button onclick="guardarDisenoEstilos()" class="btn-primary w-full py-3 rounded-xl text-sm font-bold mt-6 shadow-lg">
+        Aplicar y Guardar Todos los Cambios
+      </button>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LÓGICA COMPLETA -->
+  <script>
+    const WHATSAPP_NUMERO_ESTUDIO = "5491155558888";
+    const CLAVE_ADMIN_DEMO = "admin123";
+
+    // --- DATOS DEMO INICIALES ---
+    const perfilMaestroInicial = {
+      nombre: "Maestro Roberto Mendoza",
+      tituloRol: "Director & Pedagogo Teatral",
+      fotoUrl: "https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?auto=format&fit=crop&q=80&w=800",
+      bio: "Con más de 35 años de trayectoria en los escenarios de Latinoamérica y Europa, formado con los grandes maestros del teatro antropológico y la dramaturgia del actor.",
+      frase: '"El teatro no es representación, es presencia viva."'
+    };
+
+    const seminariosIniciales = [
+      {
+        id: 1,
+        titulo: "El Cuerpo Poético y la Máscara Neutra",
+        descripcion: "Un seminario enfocado en la economía del movimiento, presencia escénica e impulso orgánico previo a la palabra.",
+        fechaInicio: "15 de Octubre",
+        duracion: "4 encuentros",
+        diaHorario: "Sábados de 10:00 a 14:00 hs",
+        requisitos: "Experiencia previa mínima de 1 año en actuación.",
+        lugar: "Estudio Central - Sala A",
+        precio: "$45.000 ARS",
+        cupoMaximo: 10
+      },
+      {
+        id: 2,
+        titulo: "Dramaturgia del Actor y Creación de Personaje",
+        descripcion: "Técnicas de improvisación avanzada y composición física para construir personajes complejos sin texto previo.",
+        fechaInicio: "03 de Noviembre",
+        duracion: "2 Meses",
+        diaHorario: "Martes y Jueves 19:00 hs",
+        requisitos: "Abierto a actores y estudiantes avanzados.",
+        lugar: "Estudio Central - Sala B",
+        precio: "$60.000 ARS / mes",
+        cupoMaximo: 5
+      }
+    ];
+
+    const alumnosIniciales = [
+      { id: 1, nombre: "Lucía Fernández", telefono: "+5491144332211", email: "lucia.f@example.com", seminario: "El Cuerpo Poético y la Máscara Neutra", asistencias: [true, true, false, false] },
+      { id: 2, nombre: "Carlos Gómez", telefono: "+5491155667788", email: "carlos.gomez@example.com", seminario: "Dramaturgia del Actor y Creación de Personaje", asistencias: [true, true, true, true] },
+      { id: 3, nombre: "Mariana Rossi", telefono: "+5491199887766", email: "marianar@example.com", seminario: "Dramaturgia del Actor y Creación de Personaje", asistencias: [true, false, false, false] }
+    ];
+
+    // --- ESTADO Y LOCALSTORAGE ---
+    let esAdmin = false;
+    let perfilMaestro = JSON.parse(localStorage.getItem('teatro_perfil')) || perfilMaestroInicial;
+    let seminarios = JSON.parse(localStorage.getItem('teatro_seminarios')) || seminariosIniciales;
+    let alumnos = JSON.parse(localStorage.getItem('teatro_alumnos')) || alumnosIniciales;
+    
+    let configuracionEstilos = JSON.parse(localStorage.getItem('teatro_estilos')) || {
+      primary: '#6366f1',
+      accent: '#f43f5e',
+      bg: '#0f172a',
+      card: '#1e293b',
+      titles: '#ffffff',
+      subtitles: '#94a3b8',
+      fontTitles: "'Cinzel', serif",
+      fontBody: "'Inter', sans-serif",
+      sizeTitle: '44',
+      sizeSection: '32',
+      sizeCard: '20',
+      sizeBody: '15'
+    };
+
+    // --- INICIALIZACIÓN ---
+    document.addEventListener("DOMContentLoaded", () => {
+      aplicarEstilosUI(configuracionEstilos);
+      renderPerfilMaestroUI();
+      renderizarSeminariosPublicos();
+      renderizarSeminariosAdmin();
+      renderizarTablaAlumnos();
+      cargarSelectSeminarios();
+      renderizarEstadisticas();
+      initMapa();
+    });
+
+    // --- HELPER PARSER DE PRECIOS ---
+    function extraerNumeroPrecio(precioStr) {
+      if (!precioStr) return 0;
+      const numClean = precioStr.replace(/[^0-9]/g, '');
+      return parseInt(numClean) || 0;
+    }
+
+    // --- CÁLCULO DE CUPOS Y ASISTENCIA ---
+    function obtenerInscriptosPorSeminario(tituloSeminario) {
+      return alumnos.filter(a => a.seminario === tituloSeminario).length;
+    }
+
+    // --- RENDER TABLERO DE ESTADÍSTICAS (KPIs) ---
+    function renderizarEstadisticas() {
+      // 1. Total alumnos inscriptos
+      const totalAlumnosCount = alumnos.length;
+      document.getElementById('statTotalAlumnos').innerText = totalAlumnosCount;
+
+      // 2. Cálculo de recaudación total e individuales
+      let totalRecaudacion = 0;
+      let totalAsistenciasCount = 0;
+      let totalClasesPosiblesCount = 0;
+
+      const filasTablaStats = seminarios.map(sem => {
+        const inscriptos = alumnos.filter(a => a.seminario === sem.titulo);
+        const countInscriptos = inscriptos.length;
+        const cupoMax = sem.cupoMaximo || 10;
+        
+        const precioUnitarioNum = extraerNumeroPrecio(sem.precio);
+        const recaudacionSeminario = countInscriptos * precioUnitarioNum;
+        totalRecaudacion += recaudacionSeminario;
+
+        // Asistencias del seminario
+        let asistenciasSeminario = 0;
+        let clasesPosiblesSeminario = countInscriptos * 4; // 4 clases por alumno
+
+        inscriptos.forEach(al => {
+          const asisArray = al.asistencias || [false, false, false, false];
+          asistenciasSeminario += asisArray.filter(Boolean).length;
+        });
+
+        totalAsistenciasCount += asistenciasSeminario;
+        totalClasesPosiblesCount += clasesPosiblesSeminario;
+
+        const ratioSeminario = clasesPosiblesSeminario > 0 
+          ? Math.round((asistenciasSeminario / clasesPosiblesSeminario) * 100) 
+          : 0;
+
+        return `
+          <tr class="hover:bg-white/5 transition">
+            <td class="p-4 font-bold text-gray-200">${sem.titulo}</td>
+            <td class="p-4 text-center">
+              <span class="px-2.5 py-1 rounded-md text-xs font-bold ${countInscriptos >= cupoMax ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'}">
+                ${countInscriptos} / ${cupoMax}
+              </span>
+            </td>
+            <td class="p-4 text-center text-xs text-gray-300">${sem.precio}</td>
+            <td class="p-4 text-right font-bold text-emerald-400">$${recaudacionSeminario.toLocaleString('es-AR')}</td>
+            <td class="p-4 text-center font-bold text-cyan-400">${asistenciasSeminario} presentes</td>
+            <td class="p-4 text-right font-bold ${ratioSeminario >= 70 ? 'text-emerald-400' : ratioSeminario >= 40 ? 'text-amber-400' : 'text-rose-400'}">
+              ${ratioSeminario}%
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      document.getElementById('tabla-estadisticas-seminarios').innerHTML = filasTablaStats || `<tr><td colspan="6" class="p-6 text-center text-gray-500 text-xs">No hay seminarios registrados.</td></tr>`;
+
+      // Formatear Total Recaudado
+      document.getElementById('statTotalRecaudado').innerText = `$${totalRecaudacion.toLocaleString('es-AR')}`;
+      
+      // Total asistencias y Porcentaje Global
+      document.getElementById('statTotalAsistencias').innerText = totalAsistenciasCount;
+      const pctGlobal = totalClasesPosiblesCount > 0 
+        ? Math.round((totalAsistenciasCount / totalClasesPosiblesCount) * 100) 
+        : 0;
+      document.getElementById('statPorcentajePresentismo').innerText = `${pctGlobal}%`;
+    }
+
+    // --- CONTROL ROL ADMIN / SEGURIDAD ---
+    function handleGestionClick() {
+      if (esAdmin) {
+        document.getElementById('adminSection').scrollIntoView({ behavior: 'smooth' });
+      } else {
+        toggleLoginAdminModal();
+      }
+    }
+
+    function toggleLoginAdminModal() {
+      const modal = document.getElementById('modalLoginAdmin');
+      modal.classList.toggle('hidden');
+      modal.classList.toggle('flex');
+    }
+
+    function validarLoginAdmin(e) {
+      e.preventDefault();
+      const pass = document.getElementById('adminPassword').value;
+      if (pass === CLAVE_ADMIN_DEMO) {
+        esAdmin = true;
+        document.getElementById('adminSection').classList.remove('hidden');
+        document.getElementById('iconLock').className = "fa-solid fa-unlock text-emerald-400";
+        document.getElementById('lblGestionNav').innerText = "Panel Admin";
+        document.getElementById('btnGestionNav').classList.add('border-emerald-400/50');
+        toggleLoginAdminModal();
+        cargarDatosPerfilAdminForm();
+        renderizarEstadisticas();
+        document.getElementById('adminSection').scrollIntoView({ behavior: 'smooth' });
+      } else {
+        alert('Contraseña incorrecta. (Demo: admin123)');
+      }
+    }
+
+    function cerrarSesionAdmin() {
+      esAdmin = false;
+      document.getElementById('adminSection').classList.add('hidden');
+      document.getElementById('iconLock').className = "fa-solid fa-lock";
+      document.getElementById('lblGestionNav').innerText = "Gestión";
+      document.getElementById('btnGestionNav').classList.remove('border-emerald-400/50');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // --- TABS PANEL ADMIN ---
+    function switchTabAdmin(tabName) {
+      const tabs = ['estadisticas', 'perfil', 'seminarios', 'alumnos', 'publicidad'];
+      tabs.forEach(t => {
+        const content = document.getElementById(`tabAdmin${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        const btn = document.getElementById(`tabBtn${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        if (t === tabName) {
+          content.classList.remove('hidden');
+          btn.className = "px-4 py-2 text-sm font-bold border-b-2 border-indigo-500 text-indigo-400 flex items-center gap-2";
+        } else {
+          content.classList.add('hidden');
+          btn.className = "px-4 py-2 text-sm font-bold border-b-2 border-transparent text-gray-400 hover:text-white flex items-center gap-2";
+        }
+      });
+
+      if (tabName === 'estadisticas') {
+        renderizarEstadisticas();
+      }
+    }
+
+    // --- RENDER PERFIL DEL MAESTRO ---
+    function renderPerfilMaestroUI() {
+      document.getElementById('lblNombreMaestro').innerText = perfilMaestro.nombre;
+      document.getElementById('navBrandName').innerText = perfilMaestro.nombre.toUpperCase();
+      document.getElementById('lblTituloRol').innerText = perfilMaestro.tituloRol;
+      document.getElementById('lblBioMaestro').innerText = perfilMaestro.bio;
+      document.getElementById('lblFraseMaestro').innerText = perfilMaestro.frase;
+      document.getElementById('imgMaestro').src = perfilMaestro.fotoUrl;
+    }
+
+    function cargarDatosPerfilAdminForm() {
+      document.getElementById('admNombreMaestro').value = perfilMaestro.nombre;
+      document.getElementById('admTituloRol').value = perfilMaestro.tituloRol;
+      document.getElementById('admFotoUrl').value = perfilMaestro.fotoUrl;
+      document.getElementById('admBioMaestro').value = perfilMaestro.bio;
+      document.getElementById('admFraseMaestro').value = perfilMaestro.frase;
+    }
+
+    function guardarPerfilMaestro(e) {
+      e.preventDefault();
+      perfilMaestro = {
+        nombre: document.getElementById('admNombreMaestro').value,
+        tituloRol: document.getElementById('admTituloRol').value,
+        fotoUrl: document.getElementById('admFotoUrl').value,
+        bio: document.getElementById('admBioMaestro').value,
+        frase: document.getElementById('admFraseMaestro').value
+      };
+      localStorage.setItem('teatro_perfil', JSON.stringify(perfilMaestro));
+      renderPerfilMaestroUI();
+      alert('Perfil e imagen del maestro actualizados con éxito.');
+    }
+
+    function cargarFotoArchivo(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          document.getElementById('admFotoUrl').value = evt.target.result;
+        }
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // --- RENDER SEMINARIOS (PÚBLICO Y ADMIN) ---
+    function renderizarSeminariosPublicos() {
+      const container = document.getElementById('seminarios-container');
+      container.innerHTML = seminarios.map(sem => {
+        const inscriptos = obtenerInscriptosPorSeminario(sem.titulo);
+        const cupoMax = sem.cupoMaximo || 10;
+        const disponibles = cupoMax - inscriptos;
+        const agotado = disponibles <= 0;
+
+        return `
+          <div class="theme-card rounded-2xl p-6 flex flex-col justify-between space-y-4">
+            <div>
+              <div class="flex justify-between items-start mb-2">
+                <span class="text-xs font-bold px-2.5 py-1 rounded-md bg-white/10" style="color: var(--color-accent);">${sem.duracion}</span>
+                <span class="text-lg font-black" style="color: var(--color-primary);">${sem.precio}</span>
+              </div>
+              <h3 class="font-bold mb-2 card-title custom-title">${sem.titulo}</h3>
+              <p class="subtitle-text text-xs leading-relaxed mb-4">${sem.descripcion}</p>
+              
+              <!-- INDICADOR DE CUPOS -->
+              <div class="mb-4">
+                <div class="flex justify-between items-center text-xs font-semibold mb-1">
+                  <span class="subtitle-text">Cupos Disponibles:</span>
+                  <span class="${agotado ? 'text-rose-400' : 'text-emerald-400'} font-bold">
+                    ${agotado ? 'Agotado (0 vacantes)' : `${disponibles} de ${cupoMax}`}
+                  </span>
+                </div>
+                <div class="w-full bg-black/40 rounded-full h-1.5 overflow-hidden">
+                  <div class="${agotado ? 'bg-rose-500' : 'bg-emerald-500'} h-1.5 rounded-full" style="width: ${Math.min(100, (inscriptos / cupoMax) * 100)}%"></div>
+                </div>
+              </div>
+
+              <div class="space-y-2 text-xs subtitle-text border-t border-white/10 pt-3">
+                <p><strong class="text-gray-200"><i class="fa-regular fa-calendar mr-1"></i> Inicio:</strong> ${sem.fechaInicio}</p>
+                <p><strong class="text-gray-200"><i class="fa-regular fa-clock mr-1"></i> Horario:</strong> ${sem.diaHorario}</p>
+                <p><strong class="text-gray-200"><i class="fa-solid fa-location-dot mr-1"></i> Lugar:</strong> ${sem.lugar}</p>
+                <p><strong class="text-gray-200"><i class="fa-solid fa-list-check mr-1"></i> Requisitos:</strong> ${sem.requisitos}</p>
+              </div>
+            </div>
+
+            <div class="pt-2">
+              <button onclick="abrirModalInscripcion('${sem.titulo}')" ${agotado ? 'disabled' : ''} class="${agotado ? 'bg-gray-600/50 cursor-not-allowed opacity-50' : 'btn-primary'} w-full py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
+                <i class="fa-brands fa-whatsapp text-sm"></i> ${agotado ? 'Cupo Completo' : 'Consultar / Inscribirse'}
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderizarSeminariosAdmin() {
+      const tbody = document.getElementById('tabla-admin-seminarios');
+      tbody.innerHTML = seminarios.map(sem => {
+        const inscriptos = obtenerInscriptosPorSeminario(sem.titulo);
+        const cupoMax = sem.cupoMaximo || 10;
+        return `
+          <tr class="hover:bg-white/5 transition">
+            <td class="p-4 font-semibold">${sem.titulo}</td>
+            <td class="p-4 text-xs text-gray-300">${sem.fechaInicio} (${sem.duracion})</td>
+            <td class="p-4 text-xs">
+              <span class="font-bold ${inscriptos >= cupoMax ? 'text-rose-400' : 'text-emerald-400'}">${inscriptos} / ${cupoMax} alumnos</span>
+            </td>
+            <td class="p-4 font-bold text-xs" style="color: var(--color-primary);">${sem.precio}</td>
+            <td class="p-4 text-right space-x-2">
+              <button onclick="editarSeminario(${sem.id})" class="text-indigo-400 hover:text-indigo-300 text-xs px-2.5 py-1.5 border border-indigo-500/40 rounded-lg hover:bg-indigo-500/10 font-bold transition">
+                <i class="fa-solid fa-pen mr-1"></i> Editar
+              </button>
+              <button onclick="eliminarSeminario(${sem.id})" class="text-rose-400 hover:text-rose-300 text-xs px-2.5 py-1.5 border border-rose-500/40 rounded-lg hover:bg-rose-500/10 font-bold transition">
+                <i class="fa-solid fa-trash mr-1"></i> Borrar
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // --- FUNCIÓN EDITAR SEMINARIO (GLOBAL Y EXPLICITA) ---
+    window.editarSeminario = function(id) {
+      abrirModalSeminario(id);
+    };
+
+    function abrirModalSeminario(id = null) {
+      if (id !== null && id !== undefined) {
+        const sem = seminarios.find(s => s.id === parseInt(id));
+        if (sem) {
+          document.getElementById('semId').value = sem.id;
+          document.getElementById('semTitulo').value = sem.titulo;
+          document.getElementById('semDescripcion').value = sem.descripcion;
+          document.getElementById('semFecha').value = sem.fechaInicio;
+          document.getElementById('semDuracion').value = sem.duracion;
+          document.getElementById('semHorario').value = sem.diaHorario;
+          document.getElementById('semPrecio').value = sem.precio;
+          document.getElementById('semRequisitos').value = sem.requisitos;
+          document.getElementById('semLugar').value = sem.lugar;
+          document.getElementById('semCupoMax').value = sem.cupoMaximo || 10;
+          document.getElementById('tituloModalSeminario').innerText = "Editar Seminario";
+        }
+      } else {
+        document.getElementById('formSeminario').reset();
+        document.getElementById('semId').value = "";
+        document.getElementById('semCupoMax').value = 10;
+        document.getElementById('tituloModalSeminario').innerText = "Nuevo Seminario";
+      }
+      document.getElementById('modalSeminarioAdmin').classList.remove('hidden');
+      document.getElementById('modalSeminarioAdmin').classList.add('flex');
+    }
+
+    function cerrarModalSeminario() {
+      document.getElementById('modalSeminarioAdmin').classList.add('hidden');
+      document.getElementById('modalSeminarioAdmin').classList.remove('flex');
+    }
+
+    function guardarSeminario(e) {
+      e.preventDefault();
+      const id = document.getElementById('semId').value;
+      const semData = {
+        id: id ? parseInt(id) : Date.now(),
+        titulo: document.getElementById('semTitulo').value,
+        descripcion: document.getElementById('semDescripcion').value,
+        fechaInicio: document.getElementById('semFecha').value,
+        duracion: document.getElementById('semDuracion').value,
+        diaHorario: document.getElementById('semHorario').value,
+        precio: document.getElementById('semPrecio').value,
+        requisitos: document.getElementById('semRequisitos').value,
+        lugar: document.getElementById('semLugar').value,
+        cupoMaximo: parseInt(document.getElementById('semCupoMax').value) || 10
+      };
+
+      if (id) {
+        seminarios = seminarios.map(s => s.id === parseInt(id) ? semData : s);
+      } else {
+        seminarios.push(semData);
+      }
+
+      localStorage.setItem('teatro_seminarios', JSON.stringify(seminarios));
+      renderizarSeminariosPublicos();
+      renderizarSeminariosAdmin();
+      cargarSelectSeminarios();
+      renderizarEstadisticas();
+      cerrarModalSeminario();
+    }
+
+    function eliminarSeminario(id) {
+      if (confirm('¿Desea eliminar este seminario de la oferta pública?')) {
+        seminarios = seminarios.filter(s => s.id !== parseInt(id));
+        localStorage.setItem('teatro_seminarios', JSON.stringify(seminarios));
+        renderizarSeminariosPublicos();
+        renderizarSeminariosAdmin();
+        cargarSelectSeminarios();
+        renderizarEstadisticas();
+      }
+    }
+
+    // --- FILTRADO DE ALUMNOS Y CONTROL DE ASISTENCIA ---
+    function toggleAsistencia(alumnoId, claseIndex) {
+      alumnos = alumnos.map(al => {
+        if (al.id === alumnoId) {
+          if (!al.asistencias) al.asistencias = [false, false, false, false];
+          al.asistencias[claseIndex] = !al.asistencias[claseIndex];
+        }
+        return al;
+      });
+      guardarAlumnosLocalStorage();
+    }
+
+    function renderizarTablaAlumnos() {
+      const textQuery = (document.getElementById('filtroTexto')?.value || '').toLowerCase();
+      const semFilter = document.getElementById('filtroSeminario')?.value || '';
+      const asisFilter = document.getElementById('filtroAsistencia')?.value || 'todos';
+
+      const alumnosFiltrados = alumnos.filter(al => {
+        const coincideTexto = al.nombre.toLowerCase().includes(textQuery) || al.email.toLowerCase().includes(textQuery);
+        const coincideSeminario = semFilter === '' || al.seminario === semFilter;
+        
+        const asistencias = al.asistencias || [false, false, false, false];
+        const presentesCount = asistencias.filter(Boolean).length;
+        
+        let coincideAsistencia = true;
+        if (asisFilter === 'perfecta') coincideAsistencia = presentesCount === 4;
+        else if (asisFilter === 'regular') coincideAsistencia = presentesCount >= 2;
+        else if (asisFilter === 'faltas') coincideAsistencia = presentesCount < 2;
+
+        return coincideTexto && coincideSeminario && coincideAsistencia;
+      });
+
+      const tbody = document.getElementById('tabla-alumnos');
+      if (alumnosFiltrados.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-500 text-xs">No se encontraron alumnos con los filtros seleccionados.</td></tr>`;
+        actualizarContadorSeleccionados();
+        return;
+      }
+
+      tbody.innerHTML = alumnosFiltrados.map(al => {
+        const asis = al.asistencias || [false, false, false, false];
+        return `
+          <tr class="hover:bg-white/5 transition">
+            <td class="p-4 text-center">
+              <input type="checkbox" value="${al.id}" class="alumno-checkbox rounded" onchange="actualizarContadorSeleccionados()">
+            </td>
+            <td class="p-4 font-semibold">${al.nombre}</td>
+            <td class="p-4 text-xs text-gray-300">
+              <div>${al.telefono}</div>
+              <div class="text-gray-500">${al.email}</div>
+            </td>
+            <td class="p-4"><span class="bg-white/10 px-2.5 py-1 rounded-md text-xs">${al.seminario}</span></td>
+            <td class="p-4">
+              <div class="flex gap-1">
+                ${asis.map((presente, idx) => `
+                  <button onclick="toggleAsistencia(${al.id}, ${idx})" class="w-6 h-6 rounded text-xs font-bold transition flex items-center justify-center ${presente ? 'bg-emerald-500 text-white' : 'bg-white/10 text-gray-500 hover:bg-white/20'}" title="Clase ${idx + 1}">
+                    C${idx + 1}
+                  </button>
+                `).join('')}
+              </div>
+            </td>
+            <td class="p-4 text-right">
+              <button onclick="eliminarAlumno(${al.id})" class="text-rose-400 hover:text-rose-300 text-xs px-2 py-1 border border-rose-500/30 rounded">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+      actualizarContadorSeleccionados();
+    }
+
+    function guardarAlumnosLocalStorage() {
+      localStorage.setItem('teatro_alumnos', JSON.stringify(alumnos));
+      renderizarTablaAlumnos();
+      renderizarSeminariosPublicos();
+      renderizarSeminariosAdmin();
+      renderizarEstadisticas();
+    }
+
+    function toggleSelectAll() {
+      const checkAll = document.getElementById('selectAll').checked;
+      const checkboxes = document.querySelectorAll('.alumno-checkbox');
+      checkboxes.forEach(cb => cb.checked = checkAll);
+      actualizarContadorSeleccionados();
+    }
+
+    function actualizarContadorSeleccionados() {
+      const seleccionados = document.querySelectorAll('.alumno-checkbox:checked').length;
+      document.getElementById('countSelected').innerText = seleccionados;
+    }
+
+    function eliminarAlumno(id) {
+      if (confirm('¿Eliminar este alumno del registro?')) {
+        alumnos = alumnos.filter(a => a.id !== parseInt(id));
+        guardarAlumnosLocalStorage();
+      }
+    }
+
+    function toggleRegistroModal() {
+      const modal = document.getElementById('modalRegistro');
+      modal.classList.toggle('hidden');
+      modal.classList.toggle('flex');
+    }
+
+    function cargarSelectSeminarios() {
+      const options = seminarios.map(s => `<option value="${s.titulo}">${s.titulo}</option>`).join('');
+      document.getElementById('regSeminario').innerHTML = options;
+      
+      const filtroSem = document.getElementById('filtroSeminario');
+      if (filtroSem) {
+        filtroSem.innerHTML = `<option value="">Todos los seminarios</option>` + options;
+      }
+    }
+
+    function guardarAlumnoManual(e) {
+      e.preventDefault();
+      const seminarioElegido = document.getElementById('regSeminario').value;
+      const semObj = seminarios.find(s => s.titulo === seminarioElegido);
+
+      if (semObj) {
+        const inscriptos = obtenerInscriptosPorSeminario(seminarioElegido);
+        if (inscriptos >= (semObj.cupoMaximo || 10)) {
+          alert('Atención: El seminario seleccionado ha superado su cupo máximo.');
+        }
+      }
+
+      const nuevo = {
+        id: Date.now(),
+        nombre: document.getElementById('regNombre').value,
+        telefono: document.getElementById('regTelefono').value,
+        email: document.getElementById('regEmail').value,
+        seminario: seminarioElegido,
+        asistencias: [false, false, false, false]
+      };
+      alumnos.push(nuevo);
+      guardarAlumnosLocalStorage();
+      toggleRegistroModal();
+      document.getElementById('formRegistro').reset();
+    }
+
+    // --- INSCRIPCIONES Y MAPA ---
+    function abrirModalInscripcion(tituloSeminario) {
+      document.getElementById('modalSeminarioTitulo').innerText = `Inscripción: ${tituloSeminario}`;
+      document.getElementById('modalSeminarioNombre').value = tituloSeminario;
+      document.getElementById('modalInscripcion').classList.remove('hidden');
+      document.getElementById('modalInscripcion').classList.add('flex');
+    }
+
+    function cerrarInscripcionModal() {
+      document.getElementById('modalInscripcion').classList.add('hidden');
+      document.getElementById('modalInscripcion').classList.remove('flex');
+    }
+
+    function procesarInscripcion(e) {
+      e.preventDefault();
+      const seminario = document.getElementById('modalSeminarioNombre').value;
+      const nombre = document.getElementById('insNombre').value;
+      const telefono = document.getElementById('insTelefono').value;
+      const email = document.getElementById('insEmail').value;
+      const mensaje = document.getElementById('insMensaje').value;
+
+      const nuevoAlumno = { id: Date.now(), nombre, telefono, email, seminario, asistencias: [false, false, false, false] };
+      alumnos.push(nuevoAlumno);
+      guardarAlumnosLocalStorage();
+
+      const textoWA = `Hola ${perfilMaestro.nombre}. Mi nombre es *${nombre}*. Me gustaría inscribirme al seminario *${seminario}*.\n\nMis datos:\n- Teléfono: ${telefono}\n- Email: ${email}\n${mensaje ? '- Consulta: ' + mensaje : ''}`;
+      
+      const url = `https://api.whatsapp.com/send?phone=${WHATSAPP_NUMERO_ESTUDIO}&text=${encodeURIComponent(textoWA)}`;
+      cerrarInscripcionModal();
+      window.open(url, '_blank');
+    }
+
+    function abrirConsultaGeneral() {
+      const textoWA = `Hola ${perfilMaestro.nombre}, quisiera recibir información general sobre sus próximos seminarios.`;
+      window.open(`https://api.whatsapp.com/send?phone=${WHATSAPP_NUMERO_ESTUDIO}&text=${encodeURIComponent(textoWA)}`, '_blank');
+    }
+
+    function initMapa() {
+      const lat = -34.6037;
+      const lng = -58.3816;
+      const map = L.map('map').setView([lat, lng], 15);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
+      L.marker([lat, lng]).addTo(map).bindPopup(`<b>${perfilMaestro.nombre}</b><br>Av. Corrientes 1542, CABA.`).openPopup();
+    }
+
+    // --- DIFUSIÓN Y PUBLICIDAD ---
+    function previewPublicidad(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          document.getElementById('imgPreview').src = evt.target.result;
+          document.getElementById('imgPreviewContainer').classList.remove('hidden');
+        }
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function enviarPublicidadSeleccionados() {
+      const checkboxes = document.querySelectorAll('.alumno-checkbox:checked');
+      if (checkboxes.length === 0) {
+        alert('Por favor, seleccioná al menos un alumno en la pestaña de Alumnos.');
+        return;
+      }
+      const mensaje = document.getElementById('publicidadTexto').value;
+      if (!mensaje) {
+        alert('Escribí un texto promocional para la campaña.');
+        return;
+      }
+
+      const idsSeleccionados = Array.from(checkboxes).map(cb => parseInt(cb.value));
+      const destinatarios = alumnos.filter(a => idsSeleccionados.includes(a.id));
+
+      let explicacionImg = document.getElementById('publicidadImage').files.length > 0 
+        ? "\n\n(Adjuntamos imagen promocional en la conversación)." 
+        : "";
+
+      if (confirm(`Se enviará el mensaje a ${destinatarios.length} alumno(s) abriendo las pestañas correspondientes.`)) {
+        destinatarios.forEach((alumno, index) => {
+          setTimeout(() => {
+            const numLimpio = alumno.telefono.replace(/[^0-9]/g, '');
+            const textoFinal = `Hola ${alumno.nombre}!\n\n${mensaje}${explicacionImg}`;
+            const url = `https://api.whatsapp.com/send?phone=${numLimpio}&text=${encodeURIComponent(textoFinal)}`;
+            window.open(url, '_blank');
+          }, index * 1200);
+        });
+      }
+    }
+
+    // --- SETUP / PARAMETRIZACIÓN DE FUENTES & PALETAS DE COLORES ---
+    function toggleSetupModal() {
+      const modal = document.getElementById('modalSetup');
+      modal.classList.toggle('hidden');
+      modal.classList.toggle('flex');
+    }
+
+    function switchTabSetup(tabName) {
+      if (tabName === 'colores') {
+        document.getElementById('tabSetupColores').classList.remove('hidden');
+        document.getElementById('tabSetupFuentes').classList.add('hidden');
+        document.getElementById('tabSetupBtnColores').className = "px-3 py-1.5 text-xs font-bold border-b-2 border-indigo-500 text-indigo-400";
+        document.getElementById('tabSetupBtnFuentes').className = "px-3 py-1.5 text-xs font-bold border-b-2 border-transparent text-gray-400 hover:text-white";
+      } else {
+        document.getElementById('tabSetupColores').classList.add('hidden');
+        document.getElementById('tabSetupFuentes').classList.remove('hidden');
+        document.getElementById('tabSetupBtnColores').className = "px-3 py-1.5 text-xs font-bold border-b-2 border-transparent text-gray-400 hover:text-white";
+        document.getElementById('tabSetupBtnFuentes').className = "px-3 py-1.5 text-xs font-bold border-b-2 border-indigo-500 text-indigo-400";
+      }
+    }
+
+    function aplicarEstilosUI(estilos) {
+      // CSS Vars Colores
+      document.documentElement.style.setProperty('--color-primary', estilos.primary);
+      document.documentElement.style.setProperty('--color-accent', estilos.accent);
+      document.documentElement.style.setProperty('--color-bg', estilos.bg);
+      document.documentElement.style.setProperty('--color-card', estilos.card);
+      document.documentElement.style.setProperty('--color-titles', estilos.titles || '#ffffff');
+      document.documentElement.style.setProperty('--color-subtitles', estilos.subtitles || '#94a3b8');
+
+      // CSS Vars Tipografías y Tamaños
+      document.documentElement.style.setProperty('--font-family-titles', estilos.fontTitles || "'Cinzel', serif");
+      document.documentElement.style.setProperty('--font-family-body', estilos.fontBody || "'Inter', sans-serif");
+      
+      document.documentElement.style.setProperty('--font-size-title', `${estilos.sizeTitle || 44}px`);
+      document.documentElement.style.setProperty('--font-size-section', `${estilos.sizeSection || 32}px`);
+      document.documentElement.style.setProperty('--font-size-card', `${estilos.sizeCard || 20}px`);
+      document.documentElement.style.setProperty('--font-size-body', `${estilos.sizeBody || 15}px`);
+
+      // Cargar Valores en Controles
+      document.getElementById('pickerPrimary').value = estilos.primary;
+      document.getElementById('pickerAccent').value = estilos.accent;
+      document.getElementById('pickerBg').value = estilos.bg;
+      document.getElementById('pickerCard').value = estilos.card;
+      document.getElementById('pickerTitles').value = estilos.titles || '#ffffff';
+      document.getElementById('pickerSubtitles').value = estilos.subtitles || '#94a3b8';
+
+      document.getElementById('selectFontTitles').value = estilos.fontTitles || "'Cinzel', serif";
+      document.getElementById('selectFontBody').value = estilos.fontBody || "'Inter', sans-serif";
+
+      document.getElementById('rangeTitle').value = estilos.sizeTitle || 44;
+      document.getElementById('lblValTitle').innerText = (estilos.sizeTitle || 44) + ' px';
+
+      document.getElementById('rangeSection').value = estilos.sizeSection || 32;
+      document.getElementById('lblValSection').innerText = (estilos.sizeSection || 32) + ' px';
+
+      document.getElementById('rangeCard').value = estilos.sizeCard || 20;
+      document.getElementById('lblValCard').innerText = (estilos.sizeCard || 20) + ' px';
+
+      document.getElementById('rangeBody').value = estilos.sizeBody || 15;
+      document.getElementById('lblValBody').innerText = (estilos.sizeBody || 15) + ' px';
+
+      configuracionEstilos = estilos;
+      localStorage.setItem('teatro_estilos', JSON.stringify(estilos));
+    }
+
+    function aplicarPreset(primary, accent, bg, card, titles, subtitles) {
+      const actual = { ...configuracionEstilos, primary, accent, bg, card, titles, subtitles };
+      aplicarEstilosUI(actual);
+    }
+
+    function guardarDisenoEstilos() {
+      const nuevosEstilos = {
+        primary: document.getElementById('pickerPrimary').value,
+        accent: document.getElementById('pickerAccent').value,
+        bg: document.getElementById('pickerBg').value,
+        card: document.getElementById('pickerCard').value,
+        titles: document.getElementById('pickerTitles').value,
+        subtitles: document.getElementById('pickerSubtitles').value,
+        
+        fontTitles: document.getElementById('selectFontTitles').value,
+        fontBody: document.getElementById('selectFontBody').value,
+
+        sizeTitle: document.getElementById('rangeTitle').value,
+        sizeSection: document.getElementById('rangeSection').value,
+        sizeCard: document.getElementById('rangeCard').value,
+        sizeBody: document.getElementById('rangeBody').value
+      };
+
+      aplicarEstilosUI(nuevosEstilos);
+      toggleSetupModal();
+      alert('Estilos, fuentes y tipografías guardados con éxito.');
+    }
+  </script>
+</body>
+</html>
