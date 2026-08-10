@@ -11,7 +11,7 @@
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Inter:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,600;0,800;1,400&family=Roboto+Slab:wght@400;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Cinzel:wght@500;700;900&family=Inter:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,600;0,800;1,400&family=Roboto+Slab:wght@400;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
 
   <!-- Leaflet CSS & JS (Mapa) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -78,6 +78,14 @@
 
     .subtitle-text {
       color: var(--color-subtitles);
+    }
+
+    /* Nombre del Maestro en fuente Amatic SC */
+    #lblNombreMaestro {
+      font-family: 'Amatic SC', cursive !important;
+      font-weight: 700;
+      font-size: calc(var(--font-size-title) * 1.45) !important;
+      letter-spacing: 0.5px;
     }
 
     .theme-card {
@@ -186,7 +194,7 @@
         <p class="subtitle-text text-sm">Espacio de entrenamiento equipado con piso flotante de madera, acústica acondicionada y luz regulable.</p>
         <ul class="space-y-3 text-sm subtitle-text">
           <li class="flex items-center gap-3">
-            <i class="fa-solid fa-location-dot" style="color: var(--color-accent);"></i> Av. Corrientes 1542, CABA, Argentina
+            <i class="fa-solid fa-location-dot" style="color: var(--color-accent);"></i> <span id="lblUbicacionEstudio">Av. Corrientes 1542, CABA, Argentina</span>
           </li>
           <li class="flex items-center gap-3">
             <i class="fa-solid fa-clock" style="color: var(--color-primary);"></i> Recepción: Lun a Vie de 14:00 a 20:00 hs
@@ -338,6 +346,29 @@
             <label class="block text-xs font-semibold text-gray-300">Cita / Frase Inspiracional</label>
             <input type="text" id="admFraseMaestro" class="w-full mt-1 bg-black/40 border border-white/10 rounded-lg p-2.5 text-sm">
           </div>
+
+          <!-- UBICACIÓN DE NUESTRO ESTUDIO -->
+          <div class="border-t border-white/10 pt-4 space-y-4">
+            <h4 class="text-sm font-bold text-gray-200 flex items-center gap-2">
+              <i class="fa-solid fa-map-location-dot" style="color: var(--color-accent);"></i> Ubicación de Nuestro Estudio
+            </h4>
+            <div>
+              <label class="block text-xs font-semibold text-gray-300">Dirección del Estudio</label>
+              <input type="text" id="admUbicacion" placeholder="Ej: Av. Corrientes 1542, CABA, Argentina" class="w-full mt-1 bg-black/40 border border-white/10 rounded-lg p-2.5 text-sm">
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs font-semibold text-gray-300">Latitud</label>
+                <input type="number" step="any" id="admLat" placeholder="-34.6037" class="w-full mt-1 bg-black/40 border border-white/10 rounded-lg p-2.5 text-sm">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-gray-300">Longitud</label>
+                <input type="number" step="any" id="admLng" placeholder="-58.3816" class="w-full mt-1 bg-black/40 border border-white/10 rounded-lg p-2.5 text-sm">
+              </div>
+            </div>
+            <p class="text-[11px] text-gray-500 leading-relaxed"><i class="fa-solid fa-circle-info mr-1"></i> Tip: obtené la latitud y longitud haciendo clic derecho sobre el lugar en Google Maps. Al guardar, se actualiza el mapa y la dirección de contacto.</p>
+          </div>
+
           <button type="submit" class="btn-primary px-6 py-2.5 rounded-xl font-bold text-sm">Guardar Cambios de Perfil</button>
         </form>
       </div>
@@ -523,6 +554,19 @@
         <div>
           <label class="text-xs font-semibold text-gray-300">Lugar / Sala</label>
           <input type="text" id="semLugar" required class="w-full mt-1 bg-black/40 border border-white/10 rounded-lg p-2 text-sm">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-gray-300">Imagen del Seminario (URL o Subir archivo)</label>
+          <div class="flex gap-2 mt-1">
+            <input type="text" id="semImagen" oninput="mostrarPreviewSeminario(this.value.trim())" placeholder="https://ejemplo.com/imagen.jpg" class="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-sm">
+            <label class="btn-accent px-4 py-2 rounded-lg text-xs font-bold cursor-pointer whitespace-nowrap flex items-center gap-1">
+              <i class="fa-solid fa-upload"></i> Subir
+              <input type="file" accept="image/*" onchange="cargarImagenSeminario(event)" class="hidden">
+            </label>
+          </div>
+          <div id="semImagenPreviewCont" class="hidden mt-2">
+            <img id="semImagenPreview" src="" alt="Vista previa" class="w-full h-32 object-cover rounded-lg border border-white/10">
+          </div>
         </div>
         <button type="submit" class="btn-primary w-full py-3 rounded-xl font-bold mt-2">Guardar Seminario</button>
       </form>
@@ -745,7 +789,10 @@
       tituloRol: "Director & Pedagogo Teatral",
       fotoUrl: "https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?auto=format&fit=crop&q=80&w=800",
       bio: "Con más de 35 años de trayectoria en los escenarios de Latinoamérica y Europa, formado con los grandes maestros del teatro antropológico y la dramaturgia del actor.",
-      frase: '"El teatro no es representación, es presencia viva."'
+      frase: '"El teatro no es representación, es presencia viva."',
+      ubicacion: "Av. Corrientes 1542, CABA, Argentina",
+      lat: -34.6037,
+      lng: -58.3816
     };
 
     const seminariosIniciales = [
@@ -759,7 +806,8 @@
         requisitos: "Experiencia previa mínima de 1 año en actuación.",
         lugar: "Estudio Central - Sala A",
         precio: "$45.000 ARS",
-        cupoMaximo: 10
+        cupoMaximo: 10,
+        imagenUrl: ""
       },
       {
         id: 2,
@@ -771,7 +819,8 @@
         requisitos: "Abierto a actores y estudiantes avanzados.",
         lugar: "Estudio Central - Sala B",
         precio: "$60.000 ARS / mes",
-        cupoMaximo: 5
+        cupoMaximo: 5,
+        imagenUrl: ""
       }
     ];
 
@@ -963,6 +1012,8 @@
       document.getElementById('lblBioMaestro').innerText = perfilMaestro.bio;
       document.getElementById('lblFraseMaestro').innerText = perfilMaestro.frase;
       document.getElementById('imgMaestro').src = perfilMaestro.fotoUrl;
+      const lblUbic = document.getElementById('lblUbicacionEstudio');
+      if (lblUbic) lblUbic.innerText = perfilMaestro.ubicacion || "Av. Corrientes 1542, CABA, Argentina";
     }
 
     function cargarDatosPerfilAdminForm() {
@@ -971,20 +1022,29 @@
       document.getElementById('admFotoUrl').value = perfilMaestro.fotoUrl;
       document.getElementById('admBioMaestro').value = perfilMaestro.bio;
       document.getElementById('admFraseMaestro').value = perfilMaestro.frase;
+      document.getElementById('admUbicacion').value = perfilMaestro.ubicacion || "";
+      document.getElementById('admLat').value = (perfilMaestro.lat !== undefined && perfilMaestro.lat !== null) ? perfilMaestro.lat : "";
+      document.getElementById('admLng').value = (perfilMaestro.lng !== undefined && perfilMaestro.lng !== null) ? perfilMaestro.lng : "";
     }
 
     function guardarPerfilMaestro(e) {
       e.preventDefault();
+      const latVal = parseFloat(document.getElementById('admLat').value);
+      const lngVal = parseFloat(document.getElementById('admLng').value);
       perfilMaestro = {
         nombre: document.getElementById('admNombreMaestro').value,
         tituloRol: document.getElementById('admTituloRol').value,
         fotoUrl: document.getElementById('admFotoUrl').value,
         bio: document.getElementById('admBioMaestro').value,
-        frase: document.getElementById('admFraseMaestro').value
+        frase: document.getElementById('admFraseMaestro').value,
+        ubicacion: document.getElementById('admUbicacion').value.trim() || "Av. Corrientes 1542, CABA, Argentina",
+        lat: isNaN(latVal) ? -34.6037 : latVal,
+        lng: isNaN(lngVal) ? -58.3816 : lngVal
       };
       localStorage.setItem('teatro_perfil', JSON.stringify(perfilMaestro));
       renderPerfilMaestroUI();
-      alert('Perfil e imagen del maestro actualizados con éxito.');
+      actualizarMapa();
+      alert('Perfil, ubicación e imagen del maestro actualizados con éxito.');
     }
 
     function cargarFotoArchivo(e) {
@@ -1007,8 +1067,18 @@
         const disponibles = cupoMax - inscriptos;
         const agotado = disponibles <= 0;
 
+        const imgSeminario = sem.imagenUrl
+          ? `<img src="${sem.imagenUrl}" alt="${sem.titulo}" class="w-full h-40 object-cover">`
+          : `<div class="w-full h-40 flex flex-col items-center justify-center text-center bg-black/30 border border-dashed border-white/15 text-gray-500 gap-1">
+               <i class="fa-regular fa-image text-2xl"></i>
+               <span class="text-[11px] uppercase tracking-wider">Espacio para imagen</span>
+             </div>`;
+
         return `
-          <div class="theme-card rounded-2xl p-6 flex flex-col justify-between space-y-4">
+          <div class="theme-card rounded-2xl overflow-hidden flex flex-col justify-between">
+            <!-- ESPACIO PARA IMAGEN DEL SEMINARIO -->
+            <div class="w-full">${imgSeminario}</div>
+            <div class="p-6 flex flex-col justify-between flex-1 space-y-4">
             <div>
               <div class="flex justify-between items-start mb-2">
                 <span class="text-xs font-bold px-2.5 py-1 rounded-md bg-white/10" style="color: var(--color-accent);">${sem.duracion}</span>
@@ -1042,6 +1112,7 @@
               <button onclick="abrirModalInscripcion('${sem.titulo}')" ${agotado ? 'disabled' : ''} class="${agotado ? 'bg-gray-600/50 cursor-not-allowed opacity-50' : 'btn-primary'} w-full py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
                 <i class="fa-brands fa-whatsapp text-sm"></i> ${agotado ? 'Cupo Completo' : 'Consultar / Inscribirse'}
               </button>
+            </div>
             </div>
           </div>
         `;
@@ -1093,12 +1164,15 @@
           document.getElementById('semRequisitos').value = sem.requisitos;
           document.getElementById('semLugar').value = sem.lugar;
           document.getElementById('semCupoMax').value = sem.cupoMaximo || 10;
+          document.getElementById('semImagen').value = sem.imagenUrl || "";
+          mostrarPreviewSeminario(sem.imagenUrl || "");
           document.getElementById('tituloModalSeminario').innerText = "Editar Seminario";
         }
       } else {
         document.getElementById('formSeminario').reset();
         document.getElementById('semId').value = "";
         document.getElementById('semCupoMax').value = 10;
+        mostrarPreviewSeminario("");
         document.getElementById('tituloModalSeminario').innerText = "Nuevo Seminario";
       }
       document.getElementById('modalSeminarioAdmin').classList.remove('hidden');
@@ -1108,6 +1182,30 @@
     function cerrarModalSeminario() {
       document.getElementById('modalSeminarioAdmin').classList.add('hidden');
       document.getElementById('modalSeminarioAdmin').classList.remove('flex');
+    }
+
+    function mostrarPreviewSeminario(url) {
+      const cont = document.getElementById('semImagenPreviewCont');
+      const img = document.getElementById('semImagenPreview');
+      if (url) {
+        img.src = url;
+        cont.classList.remove('hidden');
+      } else {
+        img.src = "";
+        cont.classList.add('hidden');
+      }
+    }
+
+    function cargarImagenSeminario(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          document.getElementById('semImagen').value = evt.target.result;
+          mostrarPreviewSeminario(evt.target.result);
+        }
+        reader.readAsDataURL(file);
+      }
     }
 
     function guardarSeminario(e) {
@@ -1123,7 +1221,8 @@
         precio: document.getElementById('semPrecio').value,
         requisitos: document.getElementById('semRequisitos').value,
         lugar: document.getElementById('semLugar').value,
-        cupoMaximo: parseInt(document.getElementById('semCupoMax').value) || 10
+        cupoMaximo: parseInt(document.getElementById('semCupoMax').value) || 10,
+        imagenUrl: document.getElementById('semImagen').value.trim()
       };
 
       if (id) {
@@ -1329,12 +1428,27 @@
       window.open(`https://api.whatsapp.com/send?phone=${WHATSAPP_NUMERO_ESTUDIO}&text=${encodeURIComponent(textoWA)}`, '_blank');
     }
 
+    let mapaEstudio = null;
+    let marcadorEstudio = null;
+
     function initMapa() {
-      const lat = -34.6037;
-      const lng = -58.3816;
-      const map = L.map('map').setView([lat, lng], 15);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
-      L.marker([lat, lng]).addTo(map).bindPopup(`<b>${perfilMaestro.nombre}</b><br>Av. Corrientes 1542, CABA.`).openPopup();
+      const lat = (perfilMaestro.lat !== undefined && perfilMaestro.lat !== null) ? perfilMaestro.lat : -34.6037;
+      const lng = (perfilMaestro.lng !== undefined && perfilMaestro.lng !== null) ? perfilMaestro.lng : -58.3816;
+      mapaEstudio = L.map('map').setView([lat, lng], 15);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(mapaEstudio);
+      marcadorEstudio = L.marker([lat, lng]).addTo(mapaEstudio)
+        .bindPopup(`<b>${perfilMaestro.nombre}</b><br>${perfilMaestro.ubicacion || 'Av. Corrientes 1542, CABA.'}`).openPopup();
+    }
+
+    function actualizarMapa() {
+      if (!mapaEstudio) return;
+      const lat = (perfilMaestro.lat !== undefined && perfilMaestro.lat !== null) ? perfilMaestro.lat : -34.6037;
+      const lng = (perfilMaestro.lng !== undefined && perfilMaestro.lng !== null) ? perfilMaestro.lng : -58.3816;
+      mapaEstudio.setView([lat, lng], 15);
+      if (marcadorEstudio) {
+        marcadorEstudio.setLatLng([lat, lng])
+          .bindPopup(`<b>${perfilMaestro.nombre}</b><br>${perfilMaestro.ubicacion || 'Av. Corrientes 1542, CABA.'}`).openPopup();
+      }
     }
 
     // --- DIFUSIÓN Y PUBLICIDAD ---
