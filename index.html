@@ -329,9 +329,9 @@
             <input type="text" id="admTituloRol" required class="w-full mt-1 bg-black/40 border border-white/10 rounded-lg p-2.5 text-sm">
           </div>
           <div>
-            <label class="block text-xs font-semibold text-gray-300">Foto Principal (URL o Subir archivo)</label>
+            <label class="block text-xs font-semibold text-gray-300">Foto Principal (URL o archivo en la misma carpeta que index.html)</label>
             <div class="flex gap-2 mt-1">
-              <input type="text" id="admFotoUrl" placeholder="https://ejemplo.com/foto.jpg" class="w-full bg-black/40 border border-white/10 rounded-lg p-2.5 text-sm">
+              <input type="text" id="admFotoUrl" placeholder="foto.jpg  ó  https://ejemplo.com/foto.jpg" class="w-full bg-black/40 border border-white/10 rounded-lg p-2.5 text-sm">
               <label class="btn-accent px-4 py-2.5 rounded-lg text-xs font-bold cursor-pointer whitespace-nowrap flex items-center gap-1">
                 <i class="fa-solid fa-upload"></i> Subir
                 <input type="file" accept="image/*" onchange="cargarFotoArchivo(event)" class="hidden">
@@ -556,9 +556,9 @@
           <input type="text" id="semLugar" required class="w-full mt-1 bg-black/40 border border-white/10 rounded-lg p-2 text-sm">
         </div>
         <div>
-          <label class="text-xs font-semibold text-gray-300">Imagen del Seminario (URL o Subir archivo)</label>
+          <label class="text-xs font-semibold text-gray-300">Imagen del Seminario (URL o archivo en la misma carpeta que index.html)</label>
           <div class="flex gap-2 mt-1">
-            <input type="text" id="semImagen" oninput="mostrarPreviewSeminario(this.value.trim())" placeholder="https://ejemplo.com/imagen.jpg" class="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-sm">
+            <input type="text" id="semImagen" oninput="mostrarPreviewSeminario(this.value.trim())" placeholder="seminario.jpg  ó  https://ejemplo.com/imagen.jpg" class="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-sm">
             <label class="btn-accent px-4 py-2 rounded-lg text-xs font-bold cursor-pointer whitespace-nowrap flex items-center gap-1">
               <i class="fa-solid fa-upload"></i> Subir
               <input type="file" accept="image/*" onchange="cargarImagenSeminario(event)" class="hidden">
@@ -1050,11 +1050,8 @@
     function cargarFotoArchivo(e) {
       const file = e.target.files[0];
       if (file) {
-        const reader = new FileReader();
-        reader.onload = function(evt) {
-          document.getElementById('admFotoUrl').value = evt.target.result;
-        }
-        reader.readAsDataURL(file);
+        // Se toma solo el nombre del archivo (debe estar en la misma carpeta que index.html)
+        document.getElementById('admFotoUrl').value = file.name;
       }
     }
 
@@ -1199,12 +1196,9 @@
     function cargarImagenSeminario(e) {
       const file = e.target.files[0];
       if (file) {
-        const reader = new FileReader();
-        reader.onload = function(evt) {
-          document.getElementById('semImagen').value = evt.target.result;
-          mostrarPreviewSeminario(evt.target.result);
-        }
-        reader.readAsDataURL(file);
+        // Se toma solo el nombre del archivo (debe estar en la misma carpeta que index.html)
+        document.getElementById('semImagen').value = file.name;
+        mostrarPreviewSeminario(file.name);
       }
     }
 
